@@ -25,6 +25,7 @@ Responde SOLO con JSON válido, sin texto antes ni después, sin backticks.
 
 Mantén todo lo que el usuario NO pidió cambiar.
 Solo modifica lo que el ajuste indica explícitamente.
+Todo el output debe estar en español. Si el JTBD funcional existe, debe seguir la fórmula: "Cuando [situación], ayúdame a [job] para poder [outcome]".
 
 Devuelve el mismo schema JSON que recibiste, con los cambios aplicados:
 {
