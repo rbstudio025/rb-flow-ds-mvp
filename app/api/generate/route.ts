@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-5',
-      max_tokens: 1500,
+      max_tokens: 4000,
       system: `${PRINCIPLES}
 
 Responde SOLO con un objeto JSON válido, sin texto antes ni después.
@@ -186,7 +186,23 @@ Estructura exacta requerida:
   },
   "architecture": {
     "screens": [
-      {"name": "nombre pantalla", "job": "job único de esta pantalla", "priority": "mvp|v2"}
+      {
+        "name": "nombre de la pantalla",
+        "job": "job único y concreto que resuelve esta pantalla",
+        "priority": "mvp|v2",
+        "entry_nav": "cómo llega el usuario a esta pantalla",
+        "exit_nav": "a dónde puede ir el usuario desde aquí",
+        "components": [
+          {
+            "name": "nombre del componente",
+            "action": "verbo + resultado concreto que ejecuta",
+            "states": ["default", "loading", "success", "error", "disabled", "empty"],
+            "trigger": "qué acción del usuario lo activa",
+            "feedback": "qué ve el usuario inmediatamente después",
+            "edge_case": "qué pasa si falla o está vacío"
+          }
+        ]
+      }
     ],
     "core_flow": "descripción del flujo principal en máximo 3 pasos",
     "deferred": ["feature 1 diferida", "feature 2 diferida"]
