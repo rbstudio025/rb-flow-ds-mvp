@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-5',
-      max_tokens: 6000,
+      max_tokens: 16000,
       system: `${PRINCIPLES}
 
 Responde SOLO con un objeto JSON válido, sin texto antes ni después.
