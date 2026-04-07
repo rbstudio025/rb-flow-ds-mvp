@@ -71,6 +71,7 @@ export default function Home() {
   const [isDark, setIsDark] = useState(false)
   const [wireframes, setWireframes] = useState<{name: string, html: string}[]>([])
   const [wireframeIndex, setWireframeIndex] = useState(0)
+  const [briefTab, setBriefTab] = useState('resumen')
 
   function toggleTheme() {
     setIsDark(!isDark)
@@ -280,6 +281,7 @@ export default function Home() {
     setExpandedDetail(null)
     setDetailText({})
     setBrief(null)
+    setBriefTab('resumen')
     setError('')
     setAdjustment('')
   }
@@ -1105,96 +1107,200 @@ export default function Home() {
         )}
 
         {/* ── ETAPA 3: BRIEF COMPLETO ── */}
-        {stage === 'complete' && brief?.brief && (
-          <div className="flex flex-col gap-4">
+        {stage === 'complete' && brief?.brief && (() => {
+          const b = brief.brief
+          return (
+            <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
 
-            <Card className="shadow-none border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950">
-              <CardContent>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2">Brief de diseño listo</p>
-                <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{brief.brief.product_name}</h2>
-                <p className="text-zinc-600 dark:text-zinc-400 mt-1">{brief.brief.tagline}</p>
-              </CardContent>
-            </Card>
+              {/* Header */}
+              <div className="flex items-center justify-between gap-4 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-2xl shrink-0">
+                    ✦
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Brief de diseño listo</p>
+                    <h2 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight">{b.product_name}</h2>
+                    <p className="text-zinc-500 dark:text-zinc-400 mt-0.5">{b.tagline}</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs text-zinc-400 mb-1 flex items-center gap-1 justify-end">
+                    Confianza
+                    <Tooltip text="Qué tan seguro está el sistema de haber interpretado bien tu idea.">
+                      <svg className="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </Tooltip>
+                  </p>
+                  <p className={`text-4xl font-bold ${(classification?.confidence ?? 85) > 70 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                    {classification?.confidence ?? 85}%
+                  </p>
+                  <div className="w-32 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full mt-2">
+                    <div
+                      className={`h-full rounded-full ${(classification?.confidence ?? 85) > 70 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                      style={{ width: `${classification?.confidence ?? 85}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
 
-            <Card className="shadow-none border border-zinc-200 dark:border-zinc-800">
-              <CardContent>
-                <Tabs>
-                  <Tabs.ListContainer>
-                    <Tabs.List>
-                      <Tabs.Tab id="resumen">Resumen</Tabs.Tab>
-                      <Tabs.Tab id="usuario">Usuario</Tabs.Tab>
-                      <Tabs.Tab id="pantallas">Pantallas MVP</Tabs.Tab>
-                      <Tabs.Tab id="componentes">Componentes</Tabs.Tab>
-                    </Tabs.List>
-                  </Tabs.ListContainer>
-
-                  <Tabs.Panel id="resumen" className="pt-4">
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">{brief.brief.overview}</p>
-                  </Tabs.Panel>
-
-                  <Tabs.Panel id="usuario" className="pt-4 flex flex-col gap-3">
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">{brief.brief.target_user?.primary}</p>
-                    <div className="flex flex-col gap-1">
-                      {brief.brief.target_user?.pain_points?.map((p: string, i: number) => (
-                        <div key={i} className="flex gap-2 items-start">
-                          <span className="text-zinc-400 text-sm mt-0.5">–</span>
-                          <p className="text-sm text-zinc-600 dark:text-zinc-400">{p}</p>
-                        </div>
+              {/* Custom tabs */}
+              {(() => {
+                const tabs = [
+                  {
+                    id: 'resumen', label: 'Resumen',
+                    icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+                  },
+                  {
+                    id: 'usuario', label: 'Usuario',
+                    icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
+                  },
+                  {
+                    id: 'pantallas', label: 'Pantallas MVP',
+                    icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
+                  },
+                  {
+                    id: 'componentes', label: 'Componentes',
+                    icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" /></svg>,
+                  },
+                ]
+                return (
+                  <div className="flex flex-col gap-3">
+                    {/* Tab bar */}
+                    <div className="flex gap-1 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                      {tabs.map(tab => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setBriefTab(tab.id)}
+                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                            briefTab === tab.id
+                              ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300'
+                              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                          }`}
+                        >
+                          <span className={briefTab === tab.id ? 'text-indigo-500' : ''}>{tab.icon}</span>
+                          {tab.label}
+                        </button>
                       ))}
                     </div>
-                  </Tabs.Panel>
 
-                  <Tabs.Panel id="pantallas" className="pt-4 flex flex-col gap-4">
-                    {brief.brief.mvp_screens?.map((s: any, i: number) => (
-                      <div key={i}>
-                        <p className="font-medium text-sm text-zinc-800 dark:text-zinc-200">{s.name}</p>
-                        <p className="text-xs text-zinc-400 mb-2">{s.job}</p>
-                        <div className="flex flex-wrap gap-1">
-                          {s.key_components?.map((c: string, j: number) => (
-                            <Chip key={j} size="sm" variant="soft">{c}</Chip>
+                    {/* Tab content */}
+                    <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 min-h-[120px]">
+                      {briefTab === 'resumen' && (
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{b.overview}</p>
+                      )}
+                      {briefTab === 'usuario' && (
+                        <div className="flex flex-col gap-3">
+                          <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{b.target_user?.primary}</p>
+                          {b.target_user?.pain_points?.length > 0 && (
+                            <div className="flex flex-col gap-1.5 mt-1">
+                              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Pain points</p>
+                              {b.target_user.pain_points.map((p: string, i: number) => (
+                                <div key={i} className="flex gap-2 items-start">
+                                  <span className="text-zinc-300 dark:text-zinc-600 mt-0.5">–</span>
+                                  <p className="text-sm text-zinc-600 dark:text-zinc-400">{p}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {briefTab === 'pantallas' && (
+                        <div className="flex flex-col gap-4">
+                          {b.mvp_screens?.map((s: any, i: number) => (
+                            <div key={i}>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="w-5 h-5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 text-[10px] font-bold flex items-center justify-center shrink-0">{i + 1}</span>
+                                <p className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">{s.name}</p>
+                              </div>
+                              <p className="text-xs text-zinc-400 mb-2 ml-7">{s.job}</p>
+                              <div className="flex flex-wrap gap-1 ml-7">
+                                {s.key_components?.map((c: string, j: number) => (
+                                  <Chip key={j} size="sm" variant="soft">{c}</Chip>
+                                ))}
+                              </div>
+                              {i < b.mvp_screens.length - 1 && <Separator className="mt-4" />}
+                            </div>
                           ))}
                         </div>
-                        {i < brief.brief.mvp_screens.length - 1 && <Separator className="mt-4" />}
-                      </div>
-                    ))}
-                  </Tabs.Panel>
-
-                  <Tabs.Panel id="componentes" className="pt-4">
-                    <div className="flex flex-wrap gap-2">
-                      {brief.brief.component_inventory?.map((c: string, i: number) => (
-                        <Chip key={i} size="sm" color="accent" variant="soft">{c}</Chip>
-                      ))}
+                      )}
+                      {briefTab === 'componentes' && (
+                        <div className="flex flex-wrap gap-2">
+                          {b.component_inventory?.map((c: string, i: number) => (
+                            <Chip key={i} size="sm" color="accent" variant="soft">{c}</Chip>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </Tabs.Panel>
-                </Tabs>
-              </CardContent>
-            </Card>
+                  </div>
+                )
+              })()}
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1">
-                <Button variant="outline" size="sm" onPress={downloadJSON} className="w-fit">↓ Descargar JSON</Button>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500">Exporta el brief como archivo .json con toda la estructura de datos.</p>
+              {/* Action grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  {
+                    label: 'Descargar JSON', desc: 'Exporta el brief como archivo .json con toda la estructura de datos.',
+                    iconBg: 'bg-emerald-100 dark:bg-emerald-900', iconColor: 'text-emerald-600 dark:text-emerald-400',
+                    icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>,
+                    action: downloadJSON,
+                  },
+                  {
+                    label: 'Descargar Markdown', desc: 'Exporta el brief como archivo .md legible. Listo para pegar en Notion o Drive.',
+                    iconBg: 'bg-violet-100 dark:bg-violet-900', iconColor: 'text-violet-600 dark:text-violet-400',
+                    icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>,
+                    action: downloadMarkdown,
+                  },
+                  {
+                    label: 'Editar brief', desc: 'Regresa para hacer más ajustes sin perder el contexto.',
+                    iconBg: 'bg-indigo-100 dark:bg-indigo-900', iconColor: 'text-indigo-600 dark:text-indigo-400',
+                    icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>,
+                    action: handleEditBrief,
+                  },
+                  {
+                    label: 'Nueva idea', desc: 'Resetea todo y empieza desde cero.',
+                    iconBg: 'bg-amber-100 dark:bg-amber-900', iconColor: 'text-amber-600 dark:text-amber-400',
+                    icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>,
+                    action: handleReset,
+                  },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={item.action}
+                    className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-sm transition-all text-left"
+                  >
+                    <div className={`w-11 h-11 rounded-xl ${item.iconBg} flex items-center justify-center ${item.iconColor} shrink-0`}>
+                      {item.icon}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">{item.label}</p>
+                      <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </button>
+                ))}
               </div>
-              <div className="flex flex-col gap-1">
-                <Button variant="outline" size="sm" onPress={downloadMarkdown} className="w-fit">↓ Descargar Markdown</Button>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500">Exporta el brief como archivo .md legible. Listo para pegar en Notion o Drive.</p>
-              </div>
-              <div className="flex flex-col gap-1">
-                <Button variant="outline" size="sm" onPress={handleEditBrief} className="w-fit">↩ Editar brief</Button>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500">Regresa para hacer más ajustes sin perder el contexto.</p>
-              </div>
-              <div className="flex flex-col gap-1">
-                <Button variant="outline" size="sm" onPress={handleReset} className="w-fit">← Nueva idea</Button>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500">Resetea todo y empieza desde cero.</p>
-              </div>
-              <div className="flex flex-col gap-1">
-                <Button variant="outline" size="sm" onPress={handleWireframe} className="w-fit">⬡ Ver wireframe preview</Button>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500">Genera una vista visual de cada pantalla del MVP.</p>
-              </div>
+
+              {/* Wireframe — full width */}
+              <button
+                onClick={handleWireframe}
+                className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-rose-200 dark:hover:border-rose-800 hover:shadow-sm transition-all text-left w-full"
+              >
+                <div className="w-11 h-11 rounded-xl bg-rose-100 dark:bg-rose-900 flex items-center justify-center text-rose-500 shrink-0">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">Ver wireframe preview</p>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">Genera una vista visual de cada pantalla del MVP.</p>
+                </div>
+              </button>
+
             </div>
-
-          </div>
-        )}
+          )
+        })()}
 
         {/* ── WIREFRAME LOADING ── */}
         {stage === 'wireframing' && (
