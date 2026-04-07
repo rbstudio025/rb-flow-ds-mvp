@@ -15,17 +15,20 @@ export async function POST(request: NextRequest) {
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5',
-      max_tokens: 300,
-      system: `Eres un clasificador de productos digitales. 
+      max_tokens: 500,
+      system: `Eres un analizador de ideas de productos digitales.
 Analiza la idea del usuario y responde SOLO con un objeto JSON válido.
 No agregues texto antes ni después del JSON.
 
 El JSON debe tener exactamente esta estructura:
 {
-  "type": "dashboard|marketplace|saas|landing|app-contenido|herramienta|otro",
+  "type": "saas|marketplace|dashboard|app-contenido|herramienta|landing|otro",
   "confidence": número entre 0 y 100,
   "matched_template": "nombre descriptivo del template",
-  "reason": "explicación breve en español de por qué clasificaste así"
+  "reason": "explicación breve en español",
+  "problem": "el problema que resuelve, en 1-2 frases directas en español, con las palabras clave en negrita usando **texto**",
+  "user": "quién es el usuario objetivo, en 1-2 frases en español, con el tipo de usuario en negrita usando **texto**",
+  "goal": "el objetivo principal del producto, en 1-2 frases en español, con la acción principal en negrita usando **texto**"
 }`,
       messages: [
         {

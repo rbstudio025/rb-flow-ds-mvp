@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Button, Card, CardContent, CardHeader, Chip, Switch, TextArea, Separator, Tabs } from '@heroui/react'
 
 type Stage = 'input' | 'classifying' | 'classified' | 'generating' | 'generated' | 'refining' | 'briefing' | 'complete' | 'wireframing' | 'wireframe'
@@ -19,13 +19,52 @@ const ambitionOptions = [
   { id: 'launch', icon: '🚀', title: 'Listo para lanzar', desc: 'Profundo y completo, para construir en serio.', recommended: true },
 ]
 
+const screenIcons = [
+  // home
+  <svg key="home" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>,
+  // plus-circle
+  <svg key="plus" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  // folder
+  <svg key="folder" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" /></svg>,
+  // photo
+  <svg key="photo" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+  // user
+  <svg key="user" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
+  // credit-card
+  <svg key="card" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>,
+]
+
+function Tooltip({ text, children }: { text: string; children: ReactNode }) {
+  return (
+    <span className="relative group inline-flex items-center cursor-help">
+      {children}
+      <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-60 px-3 py-2 bg-zinc-900 dark:bg-zinc-700 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none leading-relaxed text-center">
+        {text}
+        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-700" />
+      </span>
+    </span>
+  )
+}
+
 export default function Home() {
   const [stage, setStage] = useState<Stage>('input')
   const [idea, setIdea] = useState('')
   const [startingPoint, setStartingPoint] = useState<string>('')
   const [ambitionLevel, setAmbitionLevel] = useState<string>('launch')
+  const [editingCard, setEditingCard] = useState<string | null>(null)
+  const [classifiedFields, setClassifiedFields] = useState({ problem: '', user: '', productType: '', goal: '' })
+  const [expandedDetail, setExpandedDetail] = useState<string | null>(null)
+  const [detailText, setDetailText] = useState<Record<string, string>>({})
+  const [quickType, setQuickType] = useState<string>('')
   const [classification, setClassification] = useState<any>(null)
   const [generated, setGenerated] = useState<any>(null)
+  const [jtbdFields, setJtbdFields] = useState({ functional: '', emotional: '', social: '' })
+  const [editingJtbd, setEditingJtbd] = useState<string | null>(null)
+  const [editableScreens, setEditableScreens] = useState<any[]>([])
+  const [editingScreen, setEditingScreen] = useState<number | null>(null)
+  const [editScreenData, setEditScreenData] = useState({ name: '', job: '' })
+  const [showAddScreen, setShowAddScreen] = useState(false)
+  const [newScreenData, setNewScreenData] = useState({ name: '', job: '' })
   const [brief, setBrief] = useState<any>(null)
   const [adjustment, setAdjustment] = useState('')
   const [error, setError] = useState('')
@@ -60,30 +99,48 @@ export default function Home() {
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
       setClassification(data.data)
-      setStage('classified')
+      setQuickType(data.data.type || '')
+      setClassifiedFields({
+        problem: data.data.problem || '',
+        user: data.data.user || '',
+        productType: data.data.matched_template || data.data.type || '',
+        goal: data.data.goal || '',
+      })
+      // Auto-generate after classify
+      await handleGenerateWith(data.data, finalIdea)
     } catch (e: any) {
       setError(e.message)
       setStage('input')
     }
   }
 
-  async function handleGenerate() {
+  async function handleGenerateWith(classData: any, ideaText: string) {
     setStage('generating')
     setError('')
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idea, classification }),
+        body: JSON.stringify({ idea: ideaText, classification: classData }),
       })
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
       setGenerated(data.data)
+      setJtbdFields({
+        functional: data.data.jtbd?.functional || '',
+        emotional: data.data.jtbd?.emotional || '',
+        social: data.data.jtbd?.social || '',
+      })
+      setEditableScreens(data.data.architecture?.screens?.filter((s: any) => s.priority === 'mvp') ?? [])
       setStage('generated')
     } catch (e: any) {
       setError(e.message)
       setStage('classified')
     }
+  }
+
+  async function handleGenerate() {
+    await handleGenerateWith(classification, idea)
   }
 
   async function handleRefine() {
@@ -99,6 +156,12 @@ export default function Home() {
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
       setGenerated(data.data)
+      setJtbdFields({
+        functional: data.data.jtbd?.functional || '',
+        emotional: data.data.jtbd?.emotional || '',
+        social: data.data.jtbd?.social || '',
+      })
+      setEditableScreens(data.data.architecture?.screens?.filter((s: any) => s.priority === 'mvp') ?? [])
       setAdjustment('')
       setStage('generated')
     } catch (e: any) {
@@ -204,67 +267,72 @@ export default function Home() {
     setIdea('')
     setStartingPoint('')
     setAmbitionLevel('launch')
+    setEditingCard(null)
+    setClassifiedFields({ problem: '', user: '', productType: '', goal: '' })
+    setQuickType('')
     setClassification(null)
     setGenerated(null)
+    setJtbdFields({ functional: '', emotional: '', social: '' })
+    setEditableScreens([])
+    setEditingJtbd(null)
+    setEditingScreen(null)
+    setShowAddScreen(false)
+    setExpandedDetail(null)
+    setDetailText({})
     setBrief(null)
     setError('')
     setAdjustment('')
   }
 
   const isInputStage = stage === 'input' || stage === 'classifying'
+  const isCombinedStage = stage === 'classified' || stage === 'generating' || stage === 'generated' || stage === 'refining'
+  const isLoading = stage === 'generating' || stage === 'refining'
 
   return (
     <main className="min-h-screen bg-white dark:bg-zinc-950 transition-colors">
 
-      {/* NAVBAR — input stage */}
-      {isInputStage && (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur border-b border-zinc-200 dark:border-zinc-800 px-6 h-14 flex items-center justify-between">
+      {/* NAVBAR */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur border-b border-zinc-200 dark:border-zinc-800 px-6 h-14 flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">RBStudio Flow</span>
             <span className="text-[10px] font-semibold px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 rounded">BETA</span>
           </div>
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Historial
-            </button>
-            <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center">
-              <svg className="w-4 h-4 text-zinc-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <span className="hidden sm:block text-zinc-300 dark:text-zinc-700">|</span>
+          <span className="hidden sm:block text-sm text-zinc-400 dark:text-zinc-500">De idea a brief de diseño en minutos</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-1.5">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Historial
+          </button>
+          <div className="flex items-center gap-1 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+            <div className="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center">
+              <svg className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
+            <svg className="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
-        </nav>
-      )}
+        </div>
+      </nav>
 
-      <div className={`mx-auto px-6 transition-all ${isInputStage ? 'pt-20 pb-12 max-w-5xl' : 'py-12 max-w-2xl'}`}>
-
-        {/* HEADER — otras etapas */}
-        {!isInputStage && (
-          <div className="flex items-start justify-between mb-12">
-            <div>
-              <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">RBStudio Flow</h1>
-              <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-0.5">De idea a brief de diseño en minutos</p>
-            </div>
-            <Switch isSelected={isDark} onChange={toggleTheme} size="sm" className="mt-1" />
-          </div>
-        )}
+      <div className={`mx-auto px-6 pt-20 pb-12 transition-all ${isCombinedStage ? 'max-w-6xl' : 'max-w-5xl'}`}>
 
         {/* ERROR */}
         {error && (
-          <Card className="mb-6 border border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800">
-            <CardContent>
-              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-            </CardContent>
-          </Card>
+          <div className="mb-6 px-4 py-3 rounded-xl border border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800">
+            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+          </div>
         )}
 
-        {/* ETAPA 1 — INPUT */}
+        {/* ── ETAPA 1: INPUT ── */}
         {isInputStage && (
           <>
-            {/* Hero heading */}
             <div className="mb-8">
               <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight">
                 Convierte una idea en una<br />
@@ -277,8 +345,6 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-              {/* Columna izquierda — formulario */}
               <div className="lg:col-span-2">
                 <Card className="shadow-none border border-zinc-200 dark:border-zinc-800">
                   <CardContent className="flex flex-col gap-0 p-0">
@@ -290,12 +356,6 @@ export default function Home() {
                           <span className="w-6 h-6 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs flex items-center justify-center font-semibold shrink-0">1</span>
                           <span className="font-semibold text-zinc-900 dark:text-zinc-100">¿Desde dónde partes?</span>
                         </div>
-                        <button className="flex items-center gap-1 text-sm text-indigo-500 hover:text-indigo-600 transition-colors">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          ¿Cuál elijo?
-                        </button>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {startingOptions.map(option => (
@@ -367,8 +427,8 @@ export default function Home() {
 
                     <div className="border-t border-zinc-100 dark:border-zinc-800" />
 
-                    {/* Step 3 — textarea opcional */}
-                    <div className="p-6 flex flex-col gap-3">
+                    {/* Step 3 */}
+                    <div className="p-6 flex flex-col gap-3 bg-zinc-50 dark:bg-zinc-900">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">💡</span>
                         <span className="font-semibold text-zinc-900 dark:text-zinc-100">Cuéntanos tu idea</span>
@@ -390,7 +450,6 @@ export default function Home() {
                     </div>
 
                     <div className="px-6 pb-6 flex flex-col gap-4">
-                      {/* Info banner */}
                       <div className="flex items-center gap-2 px-4 py-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-sm text-blue-700 dark:text-blue-300">
                         <span className="shrink-0 text-blue-500">✦</span>
                         <span>
@@ -398,8 +457,6 @@ export default function Home() {
                           <span className="font-medium underline underline-offset-2 cursor-pointer">Nosotros te ayudamos a darle forma.</span>
                         </span>
                       </div>
-
-                      {/* CTA */}
                       <div className="flex items-center gap-4 flex-wrap">
                         <Button
                           onPress={handleClassify}
@@ -417,7 +474,7 @@ export default function Home() {
                 </Card>
               </div>
 
-              {/* Columna derecha — sidebar */}
+              {/* Sidebar */}
               <div className="flex flex-col gap-5">
                 <Card className="shadow-none border border-zinc-200 dark:border-zinc-800">
                   <CardContent className="flex flex-col gap-5 p-5">
@@ -439,7 +496,6 @@ export default function Home() {
                         </div>
                       ))}
                     </div>
-
                     <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="text-blue-500 text-sm">✦</span>
@@ -449,7 +505,6 @@ export default function Home() {
                         Ahorrarte horas de planificación para que empieces a diseñar con claridad y confianza.
                       </p>
                     </div>
-
                     <div className="flex items-start gap-2 text-xs text-zinc-400 dark:text-zinc-500">
                       <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -459,144 +514,587 @@ export default function Home() {
                   </CardContent>
                 </Card>
               </div>
-
             </div>
           </>
         )}
 
-        {/* ETAPA 2 — CLASIFICACION */}
-        {stage === 'classified' && classification && (
-          <Card className="shadow-none border border-zinc-200 dark:border-zinc-800">
-            <CardContent className="gap-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-xs text-zinc-400 uppercase tracking-wider mb-1">Tipo detectado</p>
-                  <p className="text-xl font-semibold capitalize text-zinc-900 dark:text-zinc-100">{classification.type}</p>
-                  <p className="text-sm text-zinc-500 mt-1">{classification.matched_template}</p>
+        {/* ── ETAPA 2: VISTA COMBINADA (generating / generated / refining) ── */}
+        {isCombinedStage && classification && (
+          <div className="flex gap-6 items-start">
+
+            {/* LEFT SIDEBAR NAV */}
+            <aside className="w-44 shrink-0 sticky top-20 self-start hidden lg:flex flex-col gap-1">
+              {[
+                {
+                  id: 'resumen', label: 'Resumen', sub: 'Lo que entendimos',
+                  icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                },
+                {
+                  id: 'jtbd', label: 'JTBD', sub: 'Jobs to be done',
+                  icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
+                },
+                {
+                  id: 'pantallas', label: 'Pantallas MVP', sub: 'Lo esencial v1',
+                  icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                },
+                {
+                  id: 'ajustes', label: 'Ajustes', sub: 'Refina tu idea',
+                  icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                },
+                {
+                  id: 'siguiente', label: 'Siguiente paso', sub: 'Generar brief',
+                  icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                },
+              ].map((item, i) => (
+                <a
+                  key={item.id}
+                  href={`#${item.id}`}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all group ${
+                    i === 0
+                      ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300'
+                      : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-800 dark:hover:text-zinc-200'
+                  }`}
+                >
+                  <span className={i === 0 ? 'text-indigo-500' : 'text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300'}>
+                    {item.icon}
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold leading-tight">{item.label}</p>
+                    <p className="text-[10px] text-zinc-400 dark:text-zinc-500 leading-tight mt-0.5">{item.sub}</p>
+                  </div>
+                </a>
+              ))}
+
+              {/* Tip card */}
+              <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-950 rounded-xl border border-emerald-100 dark:border-emerald-900">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <svg className="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Navegación rápida</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-zinc-400 mb-1">Confianza</p>
-                  <p className={`text-3xl font-bold ${classification.confidence > 70 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Usá el menú para saltar a las secciones y revisar cada parte.
+                </p>
+              </div>
+            </aside>
+
+            {/* MAIN CONTENT */}
+            <div className="flex-1 flex flex-col gap-8 min-w-0">
+
+              {/* ── HEADER ── */}
+              <div id="resumen" className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400 text-lg">
+                    ✦
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Esto entendimos de tu idea</h2>
+                      <span className="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded">Borrador</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">Revisá, editalo o ajustá lo que detectamos. Así generamos el mejor brief para vos.</p>
+                      <button className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 whitespace-nowrap shrink-0">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        ¿Por qué esto?
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs text-zinc-400 mb-1 flex items-center gap-1 justify-end">
+                    Confianza
+                    <Tooltip text="Qué tan seguro está el sistema de haber interpretado bien tu idea. Un 80%+ indica una lectura muy precisa.">
+                      <svg className="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </Tooltip>
+                  </p>
+                  <p className={`text-4xl font-bold ${classification.confidence > 70 ? 'text-emerald-500' : 'text-amber-500'}`}>
                     {classification.confidence}%
                   </p>
-                </div>
-              </div>
-              <Separator />
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">{classification.reason}</p>
-              <div className="flex gap-3">
-                <Button variant="outline" size="sm" onPress={() => setStage('input')}>
-                  ← Editar idea
-                </Button>
-                <Button
-                  onPress={handleGenerate}
-                  className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
-                  size="sm"
-                >
-                  Generar JTBD (Jobs to be Done) y arquitectura →
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* LOADING GENERATE */}
-        {stage === 'generating' && (
-          <Card className="shadow-none border border-zinc-200 dark:border-zinc-800">
-            <CardContent className="py-16 items-center gap-2">
-              <p className="text-zinc-600 dark:text-zinc-400">Generando JTBD (Jobs to be Done) y arquitectura...</p>
-              <p className="text-sm text-zinc-400">Esto toma unos segundos</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ETAPA 3 — GENERATED */}
-        {(stage === 'generated' || stage === 'refining') && generated && (
-          <div className="flex flex-col gap-4">
-            <Card className="shadow-none border border-zinc-200 dark:border-zinc-800">
-              <CardHeader>
-                <p className="font-semibold text-zinc-900 dark:text-zinc-100">Idea expandida</p>
-              </CardHeader>
-              <CardContent className="gap-4 pt-0">
-                <p className="text-zinc-600 dark:text-zinc-400 text-sm">{generated.expanded_idea}</p>
-                <Separator />
-                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">JTBD — Jobs to be Done</p>
-                <div className="flex flex-col gap-2">
-                  <div className="flex gap-2">
-                    <Chip size="sm" variant="soft" className="shrink-0">Funcional</Chip>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                      {generated.jtbd?.functional && (() => {
-                        const text: string = generated.jtbd.functional
-                        const idx = text.indexOf(' ')
-                        return idx > 0
-                          ? <><strong>{text.slice(0, idx)}</strong>{text.slice(idx)}</>
-                          : text
-                      })()}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Chip size="sm" variant="soft" className="shrink-0">Emocional</Chip>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">{generated.jtbd?.emotional}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Chip size="sm" variant="soft" className="shrink-0">Social</Chip>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">{generated.jtbd?.social}</p>
+                  <div className="w-32 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full mt-2">
+                    <div
+                      className={`h-full rounded-full ${classification.confidence > 70 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                      style={{ width: `${classification.confidence}%` }}
+                    />
                   </div>
                 </div>
-                <Separator />
-                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Pantallas MVP</p>
-                <div className="flex flex-col gap-2">
-                  {generated.architecture?.screens?.filter((s: any) => s.priority === 'mvp').map((screen: any, i: number) => (
-                    <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
-                      <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{screen.name}</p>
-                      <p className="text-xs text-zinc-400">{screen.job}</p>
+              </div>
+
+              {/* ── 4 CARDS ── */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { id: 'problem', label: 'PROBLEMA', color: 'text-blue-500', iconBg: 'bg-blue-100 dark:bg-blue-900', icon: '🎯', value: classifiedFields.problem },
+                  { id: 'user', label: 'USUARIO', color: 'text-emerald-500', iconBg: 'bg-emerald-100 dark:bg-emerald-900', icon: '👥', value: classifiedFields.user },
+                  { id: 'productType', label: 'TIPO DE PRODUCTO', color: 'text-purple-500', iconBg: 'bg-purple-100 dark:bg-purple-900', icon: '📦', value: classifiedFields.productType },
+                  { id: 'goal', label: 'OBJETIVO PRINCIPAL', color: 'text-amber-500', iconBg: 'bg-amber-100 dark:bg-amber-900', icon: '🚩', value: classifiedFields.goal },
+                ].map((card) => (
+                  <div key={card.id} className="flex flex-col gap-3 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
+                    <div className="flex items-start justify-between">
+                      <div className={`w-9 h-9 rounded-lg ${card.iconBg} flex items-center justify-center text-base`}>
+                        {card.icon}
+                      </div>
+                      <button
+                        onClick={() => setEditingCard(editingCard === card.id ? null : card.id)}
+                        className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        Editar
+                      </button>
                     </div>
+                    <p className={`text-[10px] font-bold tracking-widest uppercase ${card.color}`}>{card.label}</p>
+                    {editingCard === card.id ? (
+                      <textarea
+                        value={card.value}
+                        onChange={(e) => setClassifiedFields(prev => ({ ...prev, [card.id]: e.target.value }))}
+                        onBlur={() => setEditingCard(null)}
+                        autoFocus
+                        rows={4}
+                        className="text-sm text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-2 resize-none w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                      />
+                    ) : (
+                      <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed flex-1">
+                        {card.value.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+                          i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+                        )}
+                      </p>
+                    )}
+                    {expandedDetail === card.id ? (
+                      <div className="flex flex-col gap-2 mt-1">
+                        <textarea
+                          value={detailText[card.id] || ''}
+                          onChange={(e) => setDetailText(prev => ({ ...prev, [card.id]: e.target.value }))}
+                          autoFocus
+                          rows={2}
+                          placeholder="Agrega contexto adicional..."
+                          className="text-xs text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-2 resize-none w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              const extra = detailText[card.id]?.trim()
+                              if (extra) setClassifiedFields(prev => ({ ...prev, [card.id]: prev[card.id as keyof typeof prev] + '\n\n' + extra }))
+                              setDetailText(prev => ({ ...prev, [card.id]: '' }))
+                              setExpandedDetail(null)
+                            }}
+                            className={`text-xs font-medium px-2 py-1 rounded-lg ${card.color} bg-zinc-100 dark:bg-zinc-800 hover:opacity-80 transition-opacity`}
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            onClick={() => { setDetailText(prev => ({ ...prev, [card.id]: '' })); setExpandedDetail(null) }}
+                            className="text-xs text-zinc-400 hover:text-zinc-600 transition-colors px-2 py-1"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setExpandedDetail(card.id)}
+                        className={`flex items-center gap-1 text-xs ${card.color} hover:opacity-70 transition-opacity mt-auto`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Agregar detalle
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* ── AJUSTES RÁPIDOS ── */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="shrink-0">
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Ajustes rápidos</p>
+                  <p className="text-xs text-zinc-400">Cambia lo esencial en 1 clic</p>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[
+                    { id: 'saas', label: 'SaaS' },
+                    { id: 'app-movil', label: 'App móvil' },
+                    { id: 'sitio-web', label: 'Sitio web' },
+                  ].map((t) => {
+                    const active = quickType === t.id
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => setQuickType(t.id)}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                          active
+                            ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
+                            : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
+                        }`}
+                      >
+                        {t.label}
+                        {active && (
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+                <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-700 shrink-0" />
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {startingOptions.map((opt) => {
+                    const active = startingPoint === opt.id
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => setStartingPoint(opt.id)}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                          active
+                            ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
+                            : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
+                        }`}
+                      >
+                        {opt.title}
+                        {active && (
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+                <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-700 shrink-0" />
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs text-zinc-500">Nivel de claridad:</span>
+                  {[
+                    { id: 'sketch', label: 'Explorando' },
+                    { id: 'launch', label: 'Tengo claro' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => setAmbitionLevel(opt.id)}
+                      className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                        ambitionLevel === opt.id
+                          ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
+                          : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
+                      }`}
+                    >
+                      {opt.label}
+                      {ambitionLevel === opt.id && (
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
                   ))}
                 </div>
-                {generated.changes_made && (
-                  <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950 border border-blue-100 dark:border-blue-900">
-                    <p className="text-xs text-blue-600 dark:text-blue-400">{generated.changes_made}</p>
+              </div>
+
+              {/* ── JTBD SECTION ── */}
+              <div id="jtbd" className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">JTBD — Lo que tu usuario necesita lograr</h3>
+                    <Tooltip text="Jobs to be Done: las razones reales por las que alguien usaría tu producto, más allá de las funciones técnicas.">
+                      <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </Tooltip>
+                  </div>
+                </div>
+
+                {isLoading || !generated ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="p-5 rounded-xl border border-zinc-200 dark:border-zinc-700 animate-pulse">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800" />
+                          <div className="h-4 w-20 bg-zinc-100 dark:bg-zinc-800 rounded" />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded w-full" />
+                          <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded w-5/6" />
+                          <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded w-4/6" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[
+                      {
+                        key: 'functional' as const,
+                        type: 'Funcional',
+                        iconBg: 'bg-rose-100 dark:bg-rose-950',
+                        iconColor: 'text-rose-500',
+                        ringColor: 'focus:ring-rose-300',
+                        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>,
+                      },
+                      {
+                        key: 'emotional' as const,
+                        type: 'Emocional',
+                        iconBg: 'bg-violet-100 dark:bg-violet-950',
+                        iconColor: 'text-violet-500',
+                        ringColor: 'focus:ring-violet-300',
+                        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+                      },
+                      {
+                        key: 'social' as const,
+                        type: 'Social',
+                        iconBg: 'bg-amber-100 dark:bg-amber-950',
+                        iconColor: 'text-amber-500',
+                        ringColor: 'focus:ring-amber-300',
+                        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>,
+                      },
+                    ].map((item) => (
+                      <div key={item.type} className="p-5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl ${item.iconBg} flex items-center justify-center ${item.iconColor}`}>
+                              {item.icon}
+                            </div>
+                            <p className="font-semibold text-zinc-800 dark:text-zinc-200">{item.type}</p>
+                          </div>
+                          <button
+                            onClick={() => setEditingJtbd(editingJtbd === item.key ? null : item.key)}
+                            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                            Editar
+                          </button>
+                        </div>
+                        {editingJtbd === item.key ? (
+                          <textarea
+                            value={jtbdFields[item.key]}
+                            onChange={(e) => setJtbdFields(prev => ({ ...prev, [item.key]: e.target.value }))}
+                            onBlur={() => setEditingJtbd(null)}
+                            autoFocus
+                            rows={4}
+                            className={`text-sm text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-2 resize-none w-full focus:outline-none focus:ring-2 ${item.ringColor}`}
+                          />
+                        ) : (
+                          <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{jtbdFields[item.key]}</p>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
 
-            <Card className="shadow-none border border-zinc-200 dark:border-zinc-800">
-              <CardHeader>
-                <p className="font-semibold text-zinc-900 dark:text-zinc-100">¿Qué quieres ajustar?</p>
-              </CardHeader>
-              <CardContent className="gap-4 pt-0">
-                <TextArea
-                  value={adjustment}
-                  onChange={(e) => setAdjustment(e.target.value)}
-                  placeholder="Ej: enfoca más en B2B, agrega pantalla de reportes al MVP..."
-                  rows={2}
-                  />
-
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onPress={handleRefine}
-                    isPending={stage === 'refining'}
-                    isDisabled={!adjustment.trim()}
-                  >
-                    Aplicar ajuste ↻
-                  </Button>
-                  <Button
-                    size="sm"
-                    onPress={handleBrief}
-                    isDisabled={stage === 'refining'}
-                    className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
-                  >
-                    Generar brief final →
-                  </Button>
+              {/* ── MVP SCREENS ── */}
+              <div id="pantallas" className="flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">PANTALLAS MVP — Lo esencial en la versión 1</h3>
+                  <Tooltip text="Las pantallas mínimas necesarias para que tu producto funcione. Podés editar, eliminar o agregar nuevas según tu visión.">
+                    <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </Tooltip>
                 </div>
-              </CardContent>
-            </Card>
+
+                {isLoading || !generated ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {[0, 1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 animate-pulse flex flex-col items-center gap-2">
+                        <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800" />
+                        <div className="h-3 w-16 bg-zinc-100 dark:bg-zinc-800 rounded" />
+                        <div className="h-2.5 w-12 bg-zinc-100 dark:bg-zinc-800 rounded" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {editableScreens.map((screen: any, i: number) => (
+                      <div key={i} className="relative p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
+                        {editingScreen === i ? (
+                          <div className="flex flex-col gap-2">
+                            <input
+                              value={editScreenData.name}
+                              onChange={(e) => setEditScreenData(prev => ({ ...prev, name: e.target.value }))}
+                              placeholder="Nombre de la pantalla"
+                              className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                            />
+                            <textarea
+                              value={editScreenData.job}
+                              onChange={(e) => setEditScreenData(prev => ({ ...prev, job: e.target.value }))}
+                              placeholder="Descripción del job"
+                              rows={2}
+                              className="text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1 w-full resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  setEditableScreens(prev => prev.map((s, idx) => idx === i ? { ...s, name: editScreenData.name, job: editScreenData.job } : s))
+                                  setEditingScreen(null)
+                                }}
+                                className="text-xs font-medium px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 hover:opacity-80 transition-opacity"
+                              >
+                                Guardar
+                              </button>
+                              <button onClick={() => setEditingScreen(null)} className="text-xs text-zinc-400 hover:text-zinc-600 transition-colors px-2 py-1">
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 dark:text-zinc-400 shrink-0">
+                              {screenIcons[i % screenIcons.length]}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 leading-tight">{screen.name}</p>
+                              <p className="text-[10px] text-zinc-400 leading-snug mt-0.5">{screen.job}</p>
+                            </div>
+                            <div className="flex flex-col gap-1 shrink-0">
+                              <button
+                                onClick={() => { setEditingScreen(i); setEditScreenData({ name: screen.name, job: screen.job }) }}
+                                className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 flex items-center justify-center text-zinc-400 hover:text-indigo-500 transition-colors"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => setEditableScreens(prev => prev.filter((_, idx) => idx !== i))}
+                                className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-red-50 dark:hover:bg-red-950 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        <span className="absolute bottom-2 left-2 w-5 h-5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-[10px] font-bold flex items-center justify-center">
+                          {i + 1}
+                        </span>
+                      </div>
+                    ))}
+
+                    {/* Add new screen */}
+                    {showAddScreen ? (
+                      <div className="p-4 rounded-xl border-2 border-dashed border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950 flex flex-col gap-2">
+                        <input
+                          value={newScreenData.name}
+                          onChange={(e) => setNewScreenData(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="Nombre de la pantalla"
+                          autoFocus
+                          className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                        />
+                        <textarea
+                          value={newScreenData.job}
+                          onChange={(e) => setNewScreenData(prev => ({ ...prev, job: e.target.value }))}
+                          placeholder="¿Qué hace el usuario aquí?"
+                          rows={2}
+                          className="text-xs text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1 w-full resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              if (newScreenData.name.trim()) {
+                                setEditableScreens(prev => [...prev, { name: newScreenData.name, job: newScreenData.job, priority: 'mvp' }])
+                                setNewScreenData({ name: '', job: '' })
+                                setShowAddScreen(false)
+                              }
+                            }}
+                            className="text-xs font-medium px-2 py-1 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition-colors"
+                          >
+                            Agregar
+                          </button>
+                          <button onClick={() => { setShowAddScreen(false); setNewScreenData({ name: '', job: '' }) }} className="text-xs text-zinc-400 hover:text-zinc-600 px-2 py-1">
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setShowAddScreen(true)}
+                        className="p-4 rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950 flex flex-col items-center justify-center gap-2 text-zinc-400 hover:text-indigo-500 transition-all min-h-[80px]"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span className="text-xs font-medium">Agregar pantalla</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* ── AJUSTE INPUT ── */}
+              <div id="ajustes" className="flex items-start gap-4 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900">
+                <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950 flex items-center justify-center text-indigo-500 shrink-0 mt-0.5">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">¿Querés ajustar algo?</p>
+                  <p className="text-xs text-zinc-400 mb-3">Contanos en lenguaje natural y lo adaptamos al instante.</p>
+                  <div className="flex gap-2">
+                    <textarea
+                      value={adjustment}
+                      onChange={(e) => setAdjustment(e.target.value)}
+                      placeholder="Ej: enfoca más en B2B, agrega pantalla de reportes al MVP..."
+                      rows={2}
+                      className="flex-1 text-sm bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 text-zinc-700 dark:text-zinc-300 placeholder-zinc-400"
+                    />
+                    <button
+                      onClick={handleRefine}
+                      disabled={!adjustment.trim() || stage === 'refining'}
+                      className="w-9 h-9 rounded-xl bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed text-white flex items-center justify-center shrink-0 self-end transition-colors"
+                    >
+                      {stage === 'refining' ? (
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── FOOTER ── */}
+              <div id="siguiente" className="flex items-center justify-between gap-3 flex-wrap">
+                <Button variant="outline" onPress={handleReset}>
+                  ← Volver a la idea
+                </Button>
+                <Button
+                  variant="outline"
+                  onPress={handleClassify}
+                  isPending={stage === 'classifying' || stage === 'generating'}
+                >
+                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Regenerar interpretación
+                </Button>
+                <Button
+                  onPress={handleBrief}
+                  isDisabled={!generated || stage === 'generating' || stage === 'refining'}
+                  isPending={stage === 'briefing'}
+                  className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 font-medium rounded-xl"
+                >
+                  Generar brief final →
+                </Button>
+              </div>
+
+            </div>
           </div>
         )}
 
-        {/* LOADING BRIEF */}
+        {/* ── LOADING BRIEF ── */}
         {stage === 'briefing' && (
           <Card className="shadow-none border border-zinc-200 dark:border-zinc-800">
             <CardContent className="py-16 items-center gap-2">
@@ -606,7 +1104,7 @@ export default function Home() {
           </Card>
         )}
 
-        {/* ETAPA 4 — BRIEF COMPLETO */}
+        {/* ── ETAPA 3: BRIEF COMPLETO ── */}
         {stage === 'complete' && brief?.brief && (
           <div className="flex flex-col gap-4">
 
@@ -675,15 +1173,15 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
                 <Button variant="outline" size="sm" onPress={downloadJSON} className="w-fit">↓ Descargar JSON</Button>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500">Exporta el brief como archivo .json con toda la estructura de datos. Útil para guardar o procesar después.</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500">Exporta el brief como archivo .json con toda la estructura de datos.</p>
               </div>
               <div className="flex flex-col gap-1">
                 <Button variant="outline" size="sm" onPress={downloadMarkdown} className="w-fit">↓ Descargar Markdown</Button>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500">Exporta el brief como archivo .md legible. Listo para pegar en Notion, Drive o compartir con el equipo.</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500">Exporta el brief como archivo .md legible. Listo para pegar en Notion o Drive.</p>
               </div>
               <div className="flex flex-col gap-1">
                 <Button variant="outline" size="sm" onPress={handleEditBrief} className="w-fit">↩ Editar brief</Button>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500">Regresa a la Etapa 3 para hacer más ajustes y regenerar el brief sin perder el contexto de la sesión.</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500">Regresa para hacer más ajustes sin perder el contexto.</p>
               </div>
               <div className="flex flex-col gap-1">
                 <Button variant="outline" size="sm" onPress={handleReset} className="w-fit">← Nueva idea</Button>
@@ -691,14 +1189,14 @@ export default function Home() {
               </div>
               <div className="flex flex-col gap-1">
                 <Button variant="outline" size="sm" onPress={handleWireframe} className="w-fit">⬡ Ver wireframe preview</Button>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500">Genera una vista visual de cada pantalla del MVP lista para revisar con tu equipo.</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500">Genera una vista visual de cada pantalla del MVP.</p>
               </div>
             </div>
 
           </div>
         )}
 
-        {/* WIREFRAME — LOADING */}
+        {/* ── WIREFRAME LOADING ── */}
         {stage === 'wireframing' && (
           <Card className="shadow-none border border-zinc-200 dark:border-zinc-800">
             <CardContent className="py-16 items-center gap-2">
@@ -708,10 +1206,9 @@ export default function Home() {
           </Card>
         )}
 
-        {/* WIREFRAME — PREVIEW */}
+        {/* ── WIREFRAME PREVIEW ── */}
         {stage === 'wireframe' && wireframes.length > 0 && (
           <div className="flex flex-col gap-4">
-
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs text-zinc-400 uppercase tracking-wider mb-1">Wireframe preview</p>
@@ -719,16 +1216,8 @@ export default function Home() {
                 <p className="text-xs text-zinc-400 mt-0.5">{wireframeIndex + 1} / {wireframes.length} pantallas</p>
               </div>
               <div className="flex gap-2 mt-1">
-                <Button
-                  variant="outline" size="sm"
-                  isDisabled={wireframeIndex === 0}
-                  onPress={() => setWireframeIndex(i => i - 1)}
-                >←</Button>
-                <Button
-                  variant="outline" size="sm"
-                  isDisabled={wireframeIndex === wireframes.length - 1}
-                  onPress={() => setWireframeIndex(i => i + 1)}
-                >→</Button>
+                <Button variant="outline" size="sm" isDisabled={wireframeIndex === 0} onPress={() => setWireframeIndex(i => i - 1)}>←</Button>
+                <Button variant="outline" size="sm" isDisabled={wireframeIndex === wireframes.length - 1} onPress={() => setWireframeIndex(i => i + 1)}>→</Button>
               </div>
             </div>
 
@@ -745,19 +1234,12 @@ export default function Home() {
               ))}
             </div>
 
-            <Card className="shadow-none border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-              <iframe
-                srcDoc={wireframes[wireframeIndex].html}
-                className="w-full h-[600px] border-0"
-                title={wireframes[wireframeIndex].name}
-                sandbox="allow-scripts"
-              />
-            </Card>
+            <div
+              className="border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-auto bg-white"
+              dangerouslySetInnerHTML={{ __html: wireframes[wireframeIndex].html }}
+            />
 
-            <Button variant="outline" size="sm" onPress={() => setStage('complete')} className="w-fit">
-              ← Volver al brief
-            </Button>
-
+            <Button variant="outline" size="sm" onPress={handleReset} className="w-fit">← Nueva idea</Button>
           </div>
         )}
 
