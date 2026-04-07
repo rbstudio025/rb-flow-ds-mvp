@@ -1085,7 +1085,6 @@ export default function Home() {
                 <Button
                   onPress={handleBrief}
                   isDisabled={!generated || stage === 'generating' || stage === 'refining'}
-                  isPending={stage === 'briefing'}
                   className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 font-medium rounded-xl"
                 >
                   Generar brief final →
