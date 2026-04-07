@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-5',
-      max_tokens: 4000,
+      max_tokens: 6000,
       system: `${PRINCIPLES}
 
 Responde SOLO con un objeto JSON válido, sin texto antes ni después.
@@ -226,14 +226,38 @@ Genera la expansión completa de esta idea con JTBD y arquitectura MVP.`,
       throw new Error('Respuesta inesperada del modelo')
     }
 
-    const cleanText = content.text.replace(/```json\n?|\n?```/g, '').trim()
-    const generated = JSON.parse(cleanText)
+    const rawText = content.text
+    console.log('[generate] stop_reason:', response.stop_reason)
+    console.log('[generate] raw length:', rawText.length)
+    console.log('[generate] raw preview:', rawText.slice(0, 300))
+
+    // Strip markdown fences if present
+    let cleanText = rawText.replace(/```json\n?|\n?```/g, '').trim()
+
+    // If JSON is truncated (no closing brace), attempt a best-effort repair
+    if (!cleanText.endsWith('}')) {
+      console.warn('[generate] JSON appears truncated, attempting repair')
+      // Find last complete top-level closing brace
+      const lastBrace = cleanText.lastIndexOf('}')
+      if (lastBrace !== -1) {
+        cleanText = cleanText.slice(0, lastBrace + 1)
+      }
+    }
+
+    let generated
+    try {
+      generated = JSON.parse(cleanText)
+    } catch (parseError) {
+      console.error('[generate] JSON parse failed:', parseError)
+      console.error('[generate] clean text:', cleanText.slice(0, 500))
+      throw new Error(`JSON inválido del modelo: ${(parseError as Error).message}`)
+    }
 
     return NextResponse.json({ success: true, data: generated })
   } catch (error) {
     console.error('Error en generate:', error)
     return NextResponse.json(
-      { error: 'Error al generar la expansión' },
+      { error: `Error al generar la expansión: ${(error as Error).message}` },
       { status: 500 }
     )
   }
