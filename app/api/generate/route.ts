@@ -138,23 +138,22 @@ Si eso se cumple, el producto funciona.
 
 ## NIVEL DE DETALLE REQUERIDO PARA PANTALLAS
 
-Para cada pantalla del MVP define:
+Para cada componente de cada pantalla define con este nivel de especificidad:
 
-PANTALLA:
-- Nombre y objetivo: qué job resuelve esta pantalla
-- Navegación entrada: cómo llega el usuario aquí
-- Navegación salida: a dónde puede ir desde aquí
+EJEMPLO CORRECTO:
+Componente: "Botón Enviar consulta"
+- action: "Valida que haya mínimo 1 foto y texto, sube los archivos a storage, crea el registro de consulta en base de datos y notifica a la estilista asignada"
+- states: ["disabled — sin foto adjunta", "loading — subiendo archivos con progress %", "success — consulta creada", "error — fallo de red sin perder contenido"]
+- trigger: "Tap del usuario. Solo habilitado con mínimo 1 foto + 20 caracteres de texto"
+- feedback: "Toast verde 'Consulta enviada', redirige al dashboard en 1.5s, badge +1 en el ícono de consultas"
+- edge_case: "Si falla el upload muestra error inline sin borrar el texto. Si pierde conexión guarda borrador localmente"
 
-COMPONENTES (cada uno con):
-1. Nombre del componente
-2. Acción concreta: qué hace (verbo + resultado)
-3. Estados: default | loading | success | error | disabled | empty
-4. Trigger: qué lo activa
-5. Feedback: qué ve el usuario inmediatamente después
-6. Edge case: qué pasa si falla o está vacío
+EJEMPLO INCORRECTO (demasiado genérico):
+- action: "enviar consulta"
+- states: ["default", "loading", "success", "error"]
+- trigger: "tap del usuario"
 
-REGLA: No listar componentes sin comportamiento.
-Cada componente debe tener todos sus estados definidos.
+REGLA: Cada campo debe responder una pregunta concreta que un diseñador o desarrollador no pueda interpretar de dos formas distintas. Si el texto es ambiguo, no es suficientemente específico.
 `
 
 export async function POST(request: NextRequest) {
