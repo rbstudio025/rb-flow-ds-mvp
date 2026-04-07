@@ -952,6 +952,37 @@ export default function Home() {
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 leading-tight">{screen.name}</p>
                               <p className="text-[10px] text-zinc-400 leading-snug mt-0.5">{screen.job}</p>
+                              {screen.components?.length > 0 && (
+                                <div className="mt-3 border-t border-zinc-100 dark:border-zinc-800 pt-3">
+                                  <div className="max-h-64 overflow-y-auto flex flex-col pr-1">
+                                    {screen.components.map((comp: any, j: number) => (
+                                      <div key={j} className={j > 0 ? 'pt-3 mt-3 border-t border-zinc-100 dark:border-zinc-800' : ''}>
+                                        <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">{comp.name}</p>
+                                        {comp.action && (
+                                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">{comp.action}</p>
+                                        )}
+                                        {comp.states?.length > 0 && (
+                                          <div className="flex flex-wrap gap-1 mt-1.5">
+                                            {comp.states.map((s: string, k: number) => (
+                                              <span key={k} className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">{s}</span>
+                                            ))}
+                                          </div>
+                                        )}
+                                        <div className="mt-1 flex flex-col gap-0.5">
+                                          {([['Trigger', comp.trigger], ['Feedback', comp.feedback], ['Edge case', comp.edge_case]] as [string, string][]).map(([label, val]) =>
+                                            val ? (
+                                              <div key={label} className="flex gap-2">
+                                                <span className="text-[10px] text-zinc-400 w-[58px] shrink-0 pt-px">{label}</span>
+                                                <span className="text-[10px] text-zinc-700 dark:text-zinc-300">{val}</span>
+                                              </div>
+                                            ) : null
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                             <div className="flex flex-col gap-1 shrink-0">
                               <button
