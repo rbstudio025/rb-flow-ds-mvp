@@ -135,6 +135,26 @@ Atomic Design: Define átomos y moléculas primero. Las pantallas son combinacio
 
 Primero claridad. Después fluidez. Después estética.
 Si eso se cumple, el producto funciona.
+
+## NIVEL DE DETALLE REQUERIDO PARA PANTALLAS
+
+Para cada pantalla del MVP define:
+
+PANTALLA:
+- Nombre y objetivo: qué job resuelve esta pantalla
+- Navegación entrada: cómo llega el usuario aquí
+- Navegación salida: a dónde puede ir desde aquí
+
+COMPONENTES (cada uno con):
+1. Nombre del componente
+2. Acción concreta: qué hace (verbo + resultado)
+3. Estados: default | loading | success | error | disabled | empty
+4. Trigger: qué lo activa
+5. Feedback: qué ve el usuario inmediatamente después
+6. Edge case: qué pasa si falla o está vacío
+
+REGLA: No listar componentes sin comportamiento.
+Cada componente debe tener todos sus estados definidos.
 `
 
 export async function POST(request: NextRequest) {
