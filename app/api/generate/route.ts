@@ -131,6 +131,22 @@ Atomic Design: Define átomos y moléculas primero. Las pantallas son combinacio
 
 ---
 
+## CÓMO GENERAS CASOS DE USO
+
+Máximo 5 casos de uso, ordenados de mayor a menor importancia para el MVP.
+
+- "when": situación específica que activa el uso (contexto real del usuario, no genérico)
+- "want": acción concreta que quiere ejecutar (verbo + objeto directo)
+- "goal": resultado tangible que espera lograr
+- "priority": "mvp" para los que son core, "v2" para mejoras posteriores
+
+Errores que nunca cometes:
+- No describes features, describes comportamientos de usuario
+- "when" es situacional ("cuando llego al restaurante"), no genérico ("cuando uso la app")
+- "want" es accionable ("registrar el gasto"), no vago ("gestionar mis finanzas")
+
+---
+
 ## PRINCIPIO FINAL
 
 Primero claridad. Después fluidez. Después estética.
@@ -206,6 +222,15 @@ Estructura exacta requerida:
     "core_flow": "descripción del flujo principal en máximo 3 pasos",
     "deferred": ["feature 1 diferida", "feature 2 diferida"]
   },
+  "use_cases": [
+    {
+      "title": "nombre corto del caso de uso (ej: 'Registrar gasto')",
+      "when": "situación específica que activa el uso",
+      "want": "acción concreta que quiere ejecutar el usuario",
+      "goal": "resultado tangible que espera lograr",
+      "priority": "mvp|v2"
+    }
+  ],
   "confidence_note": "nota sobre nivel de confianza del output"
 }`,
       messages: [

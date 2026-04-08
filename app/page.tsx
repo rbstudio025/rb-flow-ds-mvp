@@ -1249,6 +1249,10 @@ export default function Home() {
                     icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
                   },
                   {
+                    id: 'casos', label: 'Casos de uso',
+                    icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>,
+                  },
+                  {
                     id: 'pantallas', label: 'Pantallas MVP',
                     icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
                   },
@@ -1295,6 +1299,41 @@ export default function Home() {
                                 </div>
                               ))}
                             </div>
+                          )}
+                        </div>
+                      )}
+                      {briefTab === 'casos' && (
+                        <div className="flex flex-col gap-4">
+                          {generated?.use_cases?.length > 0 ? (
+                            generated.use_cases.map((uc: any, i: number) => (
+                              <div key={i}>
+                                <div className="flex items-center justify-between gap-2 mb-2">
+                                  <p className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">{uc.title}</p>
+                                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                                    uc.priority === 'mvp'
+                                      ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300'
+                                      : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800'
+                                  }`}>{uc.priority}</span>
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex gap-2 items-start">
+                                    <span className="text-[10px] text-zinc-400 w-14 shrink-0 pt-0.5 uppercase tracking-wide">Cuando</span>
+                                    <p className="text-sm text-zinc-600 dark:text-zinc-400">{uc.when}</p>
+                                  </div>
+                                  <div className="flex gap-2 items-start">
+                                    <span className="text-[10px] text-zinc-400 w-14 shrink-0 pt-0.5 uppercase tracking-wide">Quiero</span>
+                                    <p className="text-sm text-zinc-600 dark:text-zinc-400">{uc.want}</p>
+                                  </div>
+                                  <div className="flex gap-2 items-start">
+                                    <span className="text-[10px] text-zinc-400 w-14 shrink-0 pt-0.5 uppercase tracking-wide">Para</span>
+                                    <p className="text-sm text-zinc-600 dark:text-zinc-400">{uc.goal}</p>
+                                  </div>
+                                </div>
+                                {i < generated.use_cases.length - 1 && <Separator className="mt-4" />}
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-zinc-400">No hay casos de uso disponibles. Regenerá la especificación.</p>
                           )}
                         </div>
                       )}
