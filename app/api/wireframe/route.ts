@@ -84,17 +84,37 @@ td{padding:10px 12px;border-bottom:1px solid #f3f4f6;color:#374151}
 .tab-btn.active{color:#111827;border-bottom-color:#111827;font-weight:500}
 </style>
 
-ESTRUCTURA DEL HTML:
-1. Nav: <nav id="top-nav"> con logo y links. Primer link con class="active", resto sin.
-2. Contenido: <div id="app-content"> con todas las pantallas.
-3. Cada pantalla: <div id="screen-NOMBRE" class="screen visible"> (primera) o <div id="screen-NOMBRE" class="screen"> (resto)
+ESTRUCTURA DEL HTML — sigue este esqueleto exacto:
 
-NAVEGACIÓN JS al final del body — copia exactamente:
+<nav id="top-nav">
+  <span class="logo">NombreApp</span>
+  <a data-screen="Pantalla1" onclick="showScreen('Pantalla1')" class="active">Pantalla1</a>
+  <a data-screen="Pantalla2" onclick="showScreen('Pantalla2')">Pantalla2</a>
+  <a data-screen="Pantalla3" onclick="showScreen('Pantalla3')">Pantalla3</a>
+</nav>
+<div id="app-content">
+  <div id="screen-Pantalla1" class="screen visible">...contenido...</div>
+  <div id="screen-Pantalla2" class="screen">...contenido...</div>
+  <div id="screen-Pantalla3" class="screen">...contenido...</div>
+</div>
+
+REGLAS DE NAVEGACIÓN (crítico):
+- Cada <a> del nav DEBE tener: data-screen="ID" Y onclick="showScreen('ID')" — ambos atributos, con el mismo ID.
+- El ID usado en data-screen, onclick y el sufijo del div id DEBEN ser idénticos: sin espacios, sin acentos, sin caracteres especiales. Ejemplo: "Dashboard", "NuevoPedido", "Perfil".
+- La primera pantalla: class="screen visible" — las demás: class="screen" (solo eso, sin visible).
+- NUNCA uses class="screen" en la primera pantalla ni class="screen visible" en las demás.
+
+NAVEGACIÓN JS al final del body — copia exactamente este bloque sin modificarlo:
 <script>
+(function(){
+  var screens=document.querySelectorAll('.screen');
+  console.log('[wireframe] pantallas inicializadas: '+screens.length);
+  screens.forEach(function(s,i){if(i>0)s.style.display='none';});
+})();
 function showScreen(id){
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('visible')});
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('visible');s.style.display='none'});
   var el=document.getElementById('screen-'+id);
-  if(el){el.classList.add('visible')}else{console.warn('Screen not found: screen-'+id)}
+  if(el){el.classList.add('visible');el.style.display='block';}else{console.warn('[wireframe] pantalla no encontrada: screen-'+id);}
   document.querySelectorAll('#top-nav a[data-screen]').forEach(function(a){a.classList.remove('active')});
   var nav=document.querySelector('#top-nav a[data-screen="'+id+'"]');
   if(nav)nav.classList.add('active');
@@ -108,8 +128,6 @@ function showTab(tabGroupId,tabId){
   if(btn)btn.classList.add('active');
 }
 </script>
-
-REGLA DE IDs: El id de cada pantalla DEBE ser exactamente "screen-" + el mismo string que usas en showScreen() y en data-screen del nav. Sin espacios, sin acentos. Ejemplo: id="screen-Dashboard" ↔ showScreen('Dashboard') ↔ data-screen="Dashboard".
 
 TABS INTERNAS — cuando una pantalla tenga pestañas usa este patrón:
 <div class="tabs"><button class="tab-btn active" data-tab-btn-group="GRUPO" data-tab="TAB1" onclick="showTab('GRUPO','TAB1')">Label</button>...</div>
@@ -145,7 +163,8 @@ Componentes UI: ${component_inventory?.join(', ') || 'estándar'}
 Pantallas a generar (en este orden):
 ${screensContext}
 
-IDs de pantalla para showScreen(): ${screenNames.map((n: string) => `'${n.replace(/\s+/g, '')}'`).join(', ')}
+IDs de pantalla (sin espacios, sin acentos — úsalos exactamente igual en id="screen-ID", data-screen="ID" y onclick="showScreen('ID')"):
+${screenNames.map((n: string, i: number) => `  Pantalla ${i+1}: ID="${n.replace(/\s+/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')}"`).join('\n')}
 
 Genera el único HTML navegable con todas las pantallas.`,
         },
