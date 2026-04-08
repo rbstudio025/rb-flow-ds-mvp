@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { Button, Card, CardContent, CardHeader, Chip, Switch, TextArea, Separator, Tabs } from '@heroui/react'
 
 type Stage = 'input' | 'classifying' | 'classified' | 'generating' | 'generated' | 'refining' | 'briefing' | 'complete' | 'wireframing' | 'wireframe'
@@ -43,6 +43,65 @@ function Tooltip({ text, children }: { text: string; children: ReactNode }) {
         <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-700" />
       </span>
     </span>
+  )
+}
+
+function StepLoader({ steps, totalSeconds = 50 }: { steps: string[]; totalSeconds?: number }) {
+  const [stepIndex, setStepIndex] = useState(0)
+  const [progress, setProgress] = useState(0)
+  const progressRef = useRef(0)
+
+  useEffect(() => {
+    const stepInterval = setInterval(() => {
+      setStepIndex(i => Math.min(i + 1, steps.length - 1))
+    }, 8000)
+
+    const tickMs = 100
+    const increment = 90 / ((totalSeconds * 1000) / tickMs)
+    const progressInterval = setInterval(() => {
+      progressRef.current = Math.min(progressRef.current + increment, 90)
+      setProgress(progressRef.current)
+    }, tickMs)
+
+    return () => {
+      clearInterval(stepInterval)
+      clearInterval(progressInterval)
+    }
+  }, [])
+
+  return (
+    <div className="flex flex-col items-center justify-center py-24 px-6 gap-8">
+      {/* Spinner */}
+      <div className="relative w-16 h-16">
+        <div className="absolute inset-0 rounded-full border-4 border-zinc-100 dark:border-zinc-800" />
+        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-indigo-500 animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse" />
+        </div>
+      </div>
+
+      {/* Step text */}
+      <div className="text-center">
+        <p className="text-base font-medium text-zinc-800 dark:text-zinc-200 transition-all duration-500">
+          {steps[stepIndex]}
+        </p>
+        <p className="text-sm text-zinc-400 mt-2">Esto toma entre 30 y 60 segundos</p>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full max-w-xs">
+        <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-indigo-500 rounded-full transition-all duration-300 ease-linear"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="flex justify-between mt-1.5">
+          <span className="text-xs text-zinc-400">{Math.round(progress)}%</span>
+          <span className="text-xs text-zinc-400">Paso {Math.min(stepIndex + 1, steps.length)} de {steps.length}</span>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -901,14 +960,12 @@ export default function Home() {
                 </div>
 
                 {isLoading || !generated ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {[0, 1, 2, 3, 4, 5].map((i) => (
-                      <div key={i} className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 animate-pulse flex flex-col items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800" />
-                        <div className="h-3 w-16 bg-zinc-100 dark:bg-zinc-800 rounded" />
-                        <div className="h-2.5 w-12 bg-zinc-100 dark:bg-zinc-800 rounded" />
-                      </div>
-                    ))}
+                  <div className="flex flex-col items-center py-10 gap-6">
+                    <div className="relative w-10 h-10">
+                      <div className="absolute inset-0 rounded-full border-4 border-zinc-100 dark:border-zinc-800" />
+                      <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-indigo-500 animate-spin" />
+                    </div>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">Definiendo pantallas del MVP...</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1129,9 +1186,14 @@ export default function Home() {
         {/* ── LOADING BRIEF ── */}
         {stage === 'briefing' && (
           <Card className="shadow-none border border-zinc-200 dark:border-zinc-800">
-            <CardContent className="py-16 items-center gap-2">
-              <p className="text-zinc-600 dark:text-zinc-400">Generando especificación...</p>
-              <p className="text-sm text-zinc-400">Esto puede tomar 30 segundos</p>
+            <CardContent className="p-0">
+              <StepLoader steps={[
+                'Analizando tu idea...',
+                'Identificando usuarios y contexto...',
+                'Definiendo pantallas del MVP...',
+                'Especificando componentes y comportamientos...',
+                'Preparando tu especificación...',
+              ]} totalSeconds={50} />
             </CardContent>
           </Card>
         )}
@@ -1335,9 +1397,13 @@ export default function Home() {
         {/* ── WIREFRAME LOADING ── */}
         {stage === 'wireframing' && (
           <Card className="shadow-none border border-zinc-200 dark:border-zinc-800">
-            <CardContent className="py-16 items-center gap-2">
-              <p className="text-zinc-600 dark:text-zinc-400">Generando wireframes de cada pantalla...</p>
-              <p className="text-sm text-zinc-400">Esto puede tomar 20-30 segundos</p>
+            <CardContent className="p-0">
+              <StepLoader steps={[
+                'Interpretando la especificación...',
+                'Diseñando la estructura de cada pantalla...',
+                'Generando el HTML de los wireframes...',
+                'Casi listo...',
+              ]} totalSeconds={35} />
             </CardContent>
           </Card>
         )}
