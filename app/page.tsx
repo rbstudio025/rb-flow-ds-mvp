@@ -259,7 +259,7 @@ export default function Home() {
         body: JSON.stringify({ brief, generated }),
       })
       const data = await res.json()
-      if (!data.success) throw new Error(data.error)
+      if (!data.success) throw new Error(data.detail ? `${data.error} — ${data.detail}` : data.error)
       setWireframes(data.data.screens)
       setWireframeIndex(0)
       setStage('wireframe')
