@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'RBStudio Flow',
-  description: 'De idea a brief de diseño en minutos',
+  description: 'Transformamos ideas en especificaciones listas para construir en minutos',
 }
 
 export default function RootLayout({

@@ -301,7 +301,7 @@ export default function Home() {
             <span className="text-[10px] font-semibold px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 rounded">BETA</span>
           </div>
           <span className="hidden sm:block text-zinc-300 dark:text-zinc-700">|</span>
-          <span className="hidden sm:block text-sm text-zinc-400 dark:text-zinc-500">De idea a brief de diseño en minutos</span>
+          <span className="hidden sm:block text-sm text-zinc-400 dark:text-zinc-500">Transformamos ideas en especificaciones listas para construir en minutos</span>
         </div>
         <div className="flex items-center gap-3">
           <button className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-1.5">
@@ -337,12 +337,12 @@ export default function Home() {
           <>
             <div className="mb-8">
               <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight">
-                Convierte una idea en una<br />
-                primera versión de{' '}
-                <span className="text-indigo-500">tu producto</span>
+                Transformamos ideas en{' '}
+                <span className="text-indigo-500">especificaciones listas</span>
+                {' '}para construir en minutos
               </h1>
               <p className="text-zinc-500 dark:text-zinc-400 mt-3 text-base">
-                Te guiamos desde tu idea hasta un brief y un preview visual en minutos.
+                Alinea negocio, diseño y desarrollo antes de escribir una línea de código.
               </p>
             </div>
 
@@ -485,7 +485,7 @@ export default function Home() {
                       {[
                         { n: 1, title: 'Cuéntanos tu idea', desc: 'Elige desde dónde partes y escríbenos en tus palabras.' },
                         { n: 2, title: 'Analizamos y entendemos', desc: 'Detectamos lo clave, te hacemos 1 o 2 preguntas si hace falta.' },
-                        { n: 3, title: 'Recibes tu brief y preview', desc: 'Un brief completo + una primera versión visual para que lo veas al instante.' },
+                        { n: 3, title: 'Recibes tu especificación y preview', desc: 'Una especificación completa + una primera versión visual para que lo veas al instante.' },
                       ].map((step) => (
                         <div key={step.n} className="flex gap-3">
                           <div className="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-xs font-semibold text-zinc-600 dark:text-zinc-400 shrink-0 mt-0.5">
@@ -544,7 +544,7 @@ export default function Home() {
                   icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
                 },
                 {
-                  id: 'siguiente', label: 'Siguiente paso', sub: 'Generar brief',
+                  id: 'siguiente', label: 'Siguiente paso', sub: 'Generar especificación',
                   icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 },
               ].map((item, i) => (
@@ -596,7 +596,7 @@ export default function Home() {
                       <span className="text-xs font-medium px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded">Borrador</span>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">Revisá, editalo o ajustá lo que detectamos. Así generamos el mejor brief para vos.</p>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">Revisá, editalo o ajustá lo que detectamos. Así generamos la mejor especificación para vos.</p>
                       <button className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 whitespace-nowrap shrink-0">
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1118,7 +1118,7 @@ export default function Home() {
                   isDisabled={!generated || stage === 'generating' || stage === 'refining'}
                   className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 font-medium rounded-xl"
                 >
-                  Generar brief final →
+                  Generar especificación final →
                 </Button>
               </div>
 
@@ -1130,7 +1130,7 @@ export default function Home() {
         {stage === 'briefing' && (
           <Card className="shadow-none border border-zinc-200 dark:border-zinc-800">
             <CardContent className="py-16 items-center gap-2">
-              <p className="text-zinc-600 dark:text-zinc-400">Generando brief de diseño...</p>
+              <p className="text-zinc-600 dark:text-zinc-400">Generando especificación...</p>
               <p className="text-sm text-zinc-400">Esto puede tomar 30 segundos</p>
             </CardContent>
           </Card>
@@ -1149,7 +1149,7 @@ export default function Home() {
                     ✦
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Brief de diseño listo</p>
+                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Especificación lista</p>
                     <h2 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight">{b.product_name}</h2>
                     <p className="text-zinc-500 dark:text-zinc-400 mt-0.5">{b.tagline}</p>
                   </div>
@@ -1271,19 +1271,19 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-3">
                 {[
                   {
-                    label: 'Descargar JSON', desc: 'Exporta el brief como archivo .json con toda la estructura de datos.',
+                    label: 'Descargar JSON', desc: 'Exporta la especificación como archivo .json con toda la estructura de datos.',
                     iconBg: 'bg-emerald-100 dark:bg-emerald-900', iconColor: 'text-emerald-600 dark:text-emerald-400',
                     icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>,
                     action: downloadJSON,
                   },
                   {
-                    label: 'Descargar Markdown', desc: 'Exporta el brief como archivo .md legible. Listo para pegar en Notion o Drive.',
+                    label: 'Descargar Markdown', desc: 'Exporta la especificación como archivo .md legible. Listo para pegar en Notion o Drive.',
                     iconBg: 'bg-violet-100 dark:bg-violet-900', iconColor: 'text-violet-600 dark:text-violet-400',
                     icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>,
                     action: downloadMarkdown,
                   },
                   {
-                    label: 'Editar brief', desc: 'Regresa para hacer más ajustes sin perder el contexto.',
+                    label: 'Editar especificación', desc: 'Regresa para hacer más ajustes sin perder el contexto.',
                     iconBg: 'bg-indigo-100 dark:bg-indigo-900', iconColor: 'text-indigo-600 dark:text-indigo-400',
                     icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>,
                     action: handleEditBrief,
