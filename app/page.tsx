@@ -72,13 +72,16 @@ function StepLoader({ steps, totalSeconds = 50 }: { steps: string[]; totalSecond
   return (
     <div className="flex flex-col items-center justify-center py-24 px-6 gap-8">
       {/* Spinner */}
-      <div className="relative w-16 h-16">
-        <div className="absolute inset-0 rounded-full border-4 border-zinc-100 dark:border-zinc-800" />
-        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-indigo-500 animate-spin" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse" />
-        </div>
-      </div>
+      <div
+        style={{
+          width: 48, height: 48, borderRadius: '50%',
+          border: '4px solid #e4e4e7',
+          borderTopColor: '#6366f1',
+          animation: 'spin 0.8s linear infinite',
+          flexShrink: 0,
+        }}
+      />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* Step text */}
       <div className="text-center">
@@ -1480,17 +1483,31 @@ export default function Home() {
                   <div className="w-3 h-3 rounded-full bg-green-400" />
                 </div>
                 <div className="flex-1 bg-white dark:bg-zinc-900 rounded-md px-3 py-1 text-xs text-zinc-400 border border-zinc-200 dark:border-zinc-600 ml-1">
-                  localhost:3000
+                  wireframe preview
                 </div>
               </div>
-              {/* iframe */}
-              <iframe
-                srcDoc={wireframes[0].html}
-                sandbox="allow-scripts"
-                className="w-full"
-                style={{ height: 640, display: 'block' }}
-                title="Wireframe preview"
-              />
+              {/* iframe — guard against empty html */}
+              {wireframes[0]?.html?.trim() ? (
+                <iframe
+                  key={wireframes[0].html.length}
+                  srcDoc={wireframes[0].html}
+                  sandbox="allow-scripts"
+                  className="w-full"
+                  style={{ height: 640, display: 'block' }}
+                  title="Wireframe preview"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white dark:bg-zinc-900 text-center px-6">
+                  <p className="text-sm font-medium text-red-500">El wireframe llegó vacío</p>
+                  <p className="text-xs text-zinc-400 max-w-xs">El modelo no devolvió HTML válido. Intentá regenerar el wireframe.</p>
+                  <button
+                    onClick={handleWireframe}
+                    className="mt-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              )}
             </div>
 
             <Button variant="outline" size="sm" onPress={handleReset} className="w-fit">← Nueva idea</Button>
