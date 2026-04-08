@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     const response = await client.messages.create({
       model: 'claude-haiku-4-5',
       max_tokens: 8000,
-      system: `Eres un diseñador de wireframes. Genera UN ÚNICO archivo HTML con todas las pantallas navegables de una app mobile.
+      system: `Eres un diseñador de wireframes. Genera UN ÚNICO archivo HTML con todas las pantallas navegables en formato web/desktop.
 
 FORMATO DE RESPUESTA OBLIGATORIO:
 ===WIREFRAME===
@@ -42,46 +42,51 @@ Sin texto antes ni después. Sin JSON. Sin backticks. Solo el bloque delimitado.
 ESTRUCTURA DEL HTML:
 - DOCTYPE html completo y auto-contenido
 - <script src="https://cdn.tailwindcss.com"></script> en el head
-- body con: class="bg-gray-100 flex items-center justify-center min-h-screen p-4"
-- Shell del teléfono: <div id="phone" class="w-[375px] bg-white shadow-xl rounded-3xl overflow-hidden flex flex-col" style="height:780px">
+- body con: class="bg-gray-50 min-h-screen flex flex-col"
 
-DENTRO DEL PHONE SHELL (en este orden, sin position:fixed en ningún elemento):
-1. Status bar: <div class="bg-black text-white text-xs px-4 py-1 flex justify-between shrink-0"><span>9:41</span><span>●●●●●</span></div>
-2. Contenido: <div id="screen-content" class="flex-1 overflow-y-auto relative"> — aquí van todas las pantallas como secciones
-3. Nav bar: <div id="nav-bar" class="shrink-0 bg-white border-t border-gray-200 flex justify-around items-center h-16">
+LAYOUT WEB/DESKTOP (NO mobile, NO teléfono, NO status bar):
+1. Nav horizontal superior fija al tope:
+   <nav id="top-nav" class="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-6 sticky top-0 z-10">
+   - Logo/nombre del producto a la izquierda
+   - Links de navegación por pantalla: <a data-screen="NOMBRE" onclick="showScreen('NOMBRE'); return false;" href="#" class="text-sm font-medium text-gray-900 border-b-2 border-gray-900 pb-1">Pantalla</a>
+   - Primer link activo (border-b-2 border-gray-900), resto text-gray-400 sin border
 
-PANTALLAS dentro de #screen-content:
-- Cada pantalla: <div id="screen-NOMBRE" class="screen absolute inset-0 overflow-y-auto bg-white px-4 py-4 pb-4">
-- La primera pantalla tiene class="screen absolute inset-0 overflow-y-auto bg-white px-4 py-4 pb-4" (visible por defecto)
-- Las demás tienen class="screen absolute inset-0 overflow-y-auto bg-white px-4 py-4 pb-4 hidden"
-- El FAB va dentro de la pantalla con class="sticky bottom-4 flex justify-end pr-2 mt-4" — NO usa absolute ni fixed
+2. Contenedor principal:
+   <div id="app-content" class="flex-1">
+   - Todas las pantallas van aquí como secciones
 
-NAVEGACIÓN JS — incluir este script exacto al final del body:
+PANTALLAS dentro de #app-content:
+- Cada pantalla: <div id="screen-NOMBRE" class="screen min-h-screen px-6 py-8 max-w-5xl mx-auto">
+- Primera pantalla visible, resto con class="screen min-h-screen px-6 py-8 max-w-5xl mx-auto hidden"
+- Si la pantalla tiene sidebar: usa grid de 2 columnas (sidebar 240px + contenido principal)
+- Si es dashboard: usa grid de cards en fila
+- Si es formulario: usa columna centrada de max-w-lg
+
+NAVEGACIÓN JS — incluir al final del body:
 <script>
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   document.getElementById('screen-' + id).classList.remove('hidden');
-  document.querySelectorAll('#nav-bar button').forEach(b => {
-    b.classList.remove('text-gray-900');
-    b.classList.add('text-gray-400');
+  document.querySelectorAll('#top-nav a[data-screen]').forEach(a => {
+    a.classList.remove('text-gray-900', 'border-b-2', 'border-gray-900');
+    a.classList.add('text-gray-400');
   });
-  const active = document.querySelector('#nav-bar button[data-screen="' + id + '"]');
-  if (active) { active.classList.remove('text-gray-400'); active.classList.add('text-gray-900'); }
+  const active = document.querySelector('#top-nav a[data-screen="' + id + '"]');
+  if (active) {
+    active.classList.remove('text-gray-400');
+    active.classList.add('text-gray-900', 'border-b-2', 'border-gray-900');
+  }
 }
-// Conectar botones internos de cada pantalla a showScreen()
-// Ejemplo: onclick="showScreen('Dashboard')"
 </script>
 
 CONTENIDO DE CADA PANTALLA:
-- Inputs, botones, cards y listas según la función de la pantalla
-- Solo colores grises y blancos (wireframe)
+- Ancho completo del contenedor (max-w-5xl), nunca 375px ni limitado a mobile
+- Inputs, botones, cards, tablas y listas según la función de la pantalla
+- Solo colores grises y blancos (wireframe, no diseño final)
 - Texto pequeño gris bajo cada elemento interactivo explicando su función
 - Datos de ejemplo realistas coherentes con el producto
-- Los botones que navegan a otra pantalla usan onclick="showScreen('NombrePantalla')"
-
-NAV BAR:
-- Un botón por pantalla principal: <button data-screen="NOMBRE" onclick="showScreen('NOMBRE')" class="flex flex-col items-center gap-1 text-gray-900">
-- Primer botón activo por defecto (text-gray-900), resto text-gray-400`,
+- Botones que navegan entre pantallas usan onclick="showScreen('NombrePantalla')"
+- FABs reemplazados por botones primarios en el header de la sección`,
       messages: [
         {
           role: 'user',

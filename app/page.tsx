@@ -1349,16 +1349,29 @@ export default function Home() {
               <div>
                 <p className="text-xs text-zinc-400 uppercase tracking-wider mb-1">Wireframe preview</p>
                 <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Prototipo navegable</h2>
-                <p className="text-xs text-zinc-400 mt-0.5">Usá el nav bar dentro del teléfono para navegar entre pantallas</p>
+                <p className="text-xs text-zinc-400 mt-0.5">Usá la nav superior para navegar entre pantallas</p>
               </div>
             </div>
 
-            <div className="flex justify-center">
+            {/* Browser frame */}
+            <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden shadow-md">
+              {/* Browser chrome */}
+              <div className="bg-zinc-100 dark:bg-zinc-800 px-3 py-2 flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-700">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-400" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                  <div className="w-3 h-3 rounded-full bg-green-400" />
+                </div>
+                <div className="flex-1 bg-white dark:bg-zinc-900 rounded-md px-3 py-1 text-xs text-zinc-400 border border-zinc-200 dark:border-zinc-600 ml-1">
+                  localhost:3000
+                </div>
+              </div>
+              {/* iframe */}
               <iframe
                 srcDoc={wireframes[0].html}
                 sandbox="allow-scripts"
-                className="rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-lg"
-                style={{ width: 420, height: 820 }}
+                className="w-full"
+                style={{ height: 640, display: 'block' }}
                 title="Wireframe preview"
               />
             </div>
