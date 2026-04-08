@@ -1211,7 +1211,7 @@ export default function Home() {
                     ✦
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Especificación lista</p>
+                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Listo para construir</p>
                     <h2 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight">{b.product_name}</h2>
                     <p className="text-zinc-500 dark:text-zinc-400 mt-0.5">{b.tagline}</p>
                   </div>
@@ -1284,7 +1284,19 @@ export default function Home() {
                     {/* Tab content */}
                     <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 min-h-[120px]">
                       {briefTab === 'resumen' && (
-                        <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{b.overview}</p>
+                        <div className="flex flex-col gap-3">
+                          <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{b.overview}</p>
+                          <div className="flex gap-3 mt-1">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                              <span className="text-base font-bold text-zinc-800 dark:text-zinc-100">{b.mvp_screens?.length ?? 0}</span>
+                              <span className="text-xs text-zinc-500">pantallas MVP</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                              <span className="text-base font-bold text-zinc-800 dark:text-zinc-100">{generated?.use_cases?.filter((uc: any) => uc.priority === 'mvp').length ?? 0}</span>
+                              <span className="text-xs text-zinc-500">casos de uso MVP</span>
+                            </div>
+                          </div>
+                        </div>
                       )}
                       {briefTab === 'usuario' && (
                         <div className="flex flex-col gap-3">
@@ -1368,6 +1380,23 @@ export default function Home() {
                 )
               })()}
 
+              {/* Wireframe — acción principal */}
+              <button
+                onClick={handleWireframe}
+                className="flex items-center gap-4 p-5 rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 hover:shadow-sm transition-all text-left w-full"
+              >
+                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shrink-0">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-sm text-indigo-900 dark:text-indigo-100">Ver wireframe preview</p>
+                  <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-0.5">Genera una vista visual navegable de cada pantalla del MVP.</p>
+                </div>
+              </button>
+
               {/* Action grid */}
               <div className="grid grid-cols-2 gap-3">
                 {[
@@ -1385,7 +1414,7 @@ export default function Home() {
                   },
                   {
                     label: 'Editar especificación', desc: 'Regresa para hacer más ajustes sin perder el contexto.',
-                    iconBg: 'bg-indigo-100 dark:bg-indigo-900', iconColor: 'text-indigo-600 dark:text-indigo-400',
+                    iconBg: 'bg-zinc-100 dark:bg-zinc-800', iconColor: 'text-zinc-600 dark:text-zinc-400',
                     icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>,
                     action: handleEditBrief,
                   },
@@ -1411,23 +1440,6 @@ export default function Home() {
                   </button>
                 ))}
               </div>
-
-              {/* Wireframe — full width */}
-              <button
-                onClick={handleWireframe}
-                className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-rose-200 dark:hover:border-rose-800 hover:shadow-sm transition-all text-left w-full"
-              >
-                <div className="w-11 h-11 rounded-xl bg-rose-100 dark:bg-rose-900 flex items-center justify-center text-rose-500 shrink-0">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">Ver wireframe preview</p>
-                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">Genera una vista visual de cada pantalla del MVP.</p>
-                </div>
-              </button>
 
             </div>
           )
