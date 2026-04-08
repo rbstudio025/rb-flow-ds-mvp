@@ -1345,35 +1345,23 @@ export default function Home() {
         {/* ── WIREFRAME PREVIEW ── */}
         {stage === 'wireframe' && wireframes.length > 0 && (
           <div className="flex flex-col gap-4">
-            <div className="flex items-start justify-between">
+            <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-zinc-400 uppercase tracking-wider mb-1">Wireframe preview</p>
-                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{wireframes[wireframeIndex].name}</h2>
-                <p className="text-xs text-zinc-400 mt-0.5">{wireframeIndex + 1} / {wireframes.length} pantallas</p>
-              </div>
-              <div className="flex gap-2 mt-1">
-                <Button variant="outline" size="sm" isDisabled={wireframeIndex === 0} onPress={() => setWireframeIndex(i => i - 1)}>←</Button>
-                <Button variant="outline" size="sm" isDisabled={wireframeIndex === wireframes.length - 1} onPress={() => setWireframeIndex(i => i + 1)}>→</Button>
+                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Prototipo navegable</h2>
+                <p className="text-xs text-zinc-400 mt-0.5">Usá el nav bar dentro del teléfono para navegar entre pantallas</p>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              {wireframes.map((s, i) => (
-                <Button
-                  key={i}
-                  size="sm"
-                  variant={i === wireframeIndex ? 'primary' : 'outline'}
-                  onPress={() => setWireframeIndex(i)}
-                >
-                  {s.name}
-                </Button>
-              ))}
+            <div className="flex justify-center">
+              <iframe
+                srcDoc={wireframes[0].html}
+                sandbox="allow-scripts"
+                className="rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-lg"
+                style={{ width: 420, height: 820 }}
+                title="Wireframe preview"
+              />
             </div>
-
-            <div
-              className="border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-auto bg-white"
-              dangerouslySetInnerHTML={{ __html: wireframes[wireframeIndex].html }}
-            />
 
             <Button variant="outline" size="sm" onPress={handleReset} className="w-fit">← Nueva idea</Button>
           </div>
